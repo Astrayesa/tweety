@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tweet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TweetController extends Controller
 {
@@ -45,6 +46,10 @@ class TweetController extends Controller
     public function show(Tweet $tweet)
     {
         //
+        return view("tweets.show", [
+            'tweet' => $tweet,
+            'comments' => $tweet->comments()->get(),
+        ]);
     }
 
     /**
@@ -52,7 +57,9 @@ class TweetController extends Controller
      */
     public function edit(Tweet $tweet)
     {
-        //
+        return view('tweets.edit', [
+            'tweet' => $tweet
+        ]);
     }
 
     /**
@@ -60,7 +67,19 @@ class TweetController extends Controller
      */
     public function update(Request $request, Tweet $tweet)
     {
-        //
+        Gate::authorize('update', $tweet);
+
+        $validated = $request->validate([
+
+            'message' => 'required|string|max:255',
+        ]);
+
+        $tweet->update($validated);
+
+        // $tweet->message = $request->get('message');
+        // $tweet->save();
+
+        return redirect()->route('tweets.index');
     }
 
     /**
@@ -68,6 +87,10 @@ class TweetController extends Controller
      */
     public function destroy(Tweet $tweet)
     {
-        //
+        Gate::authorize('delete', $tweet);
+
+        $tweet->delete();
+
+        return redirect()->route('tweets.index');
     }
 }
